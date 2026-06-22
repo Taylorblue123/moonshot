@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moonshot — Project Handoff</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --panel: #1a1d27;
+    --panel-2: #20242f;
+    --text: #e6e8ee;
+    --muted: #9aa3b2;
+    --accent: #a78bfa;
+    --accent-2: #7dd3fc;
+    --good: #6ee7b7;
+    --border: #2a2f3d;
+    --code-bg: #11141b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: radial-gradient(1200px 600px at 70% -10%, #1c1530 0%, var(--bg) 55%);
+    color: var(--text);
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: 48px 20px 96px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header.hero {
+    border: 1px solid var(--border);
+    background: linear-gradient(135deg, #221b3a 0%, var(--panel) 70%);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+  }
+  header.hero h1 { margin: 0 0 6px; font-size: 30px; letter-spacing: -.5px; }
+  header.hero .tag { color: var(--accent); font-weight: 600; }
+  header.hero .sub { color: var(--muted); margin-top: 8px; }
+  header.hero .date { color: var(--muted); font-size: 13px; margin-top: 14px; }
+
+  section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 26px;
+    margin: 18px 0;
+  }
+  h2 {
+    font-size: 20px; margin: 0 0 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  h2 .num {
+    background: var(--accent); color: #1a1130;
+    font-size: 13px; font-weight: 800;
+    width: 26px; height: 26px; border-radius: 7px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  h3 { font-size: 15px; color: var(--accent-2); margin: 18px 0 6px; }
+  p { margin: 8px 0; }
+  .muted { color: var(--muted); }
+  a { color: var(--accent-2); }
+
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--panel-2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 12px 0;
+  }
+  .oneliner { font-size: 18px; }
+
+  ul, ol { margin: 8px 0; padding-left: 22px; }
+  li { margin: 5px 0; }
+  li::marker { color: var(--accent); }
+
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14.5px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--accent-2); font-size: 13px; text-transform: uppercase; letter-spacing: .4px; }
+  tbody tr:hover { background: var(--panel-2); }
+
+  code, pre { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+  code { background: var(--code-bg); padding: 1px 6px; border-radius: 5px; font-size: 13.5px; color: var(--accent-2); }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px; overflow-x: auto;
+    font-size: 13px; line-height: 1.5; color: var(--text);
+  }
+
+  .flow {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px; font-size: 13.5px;
+  }
+  .flow .box { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 11px; }
+  .flow .arrow { color: var(--accent); font-weight: 700; }
+
+  .pill { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; }
+  .pill.done { background: rgba(110,231,183,.15); color: var(--good); border: 1px solid rgba(110,231,183,.35); }
+  .pill.todo { background: rgba(167,139,250,.15); color: var(--accent); border: 1px solid rgba(167,139,250,.35); }
+  .pill.open { background: rgba(154,163,178,.15); color: var(--muted); border: 1px solid rgba(154,163,178,.3); }
+
+  .stage-title { color: var(--accent); font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .5px; margin-top: 16px; }
+  .ms { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px dashed var(--border); }
+  .ms:last-child { border-bottom: none; }
+  .ms .code { font-weight: 800; color: var(--accent-2); min-width: 34px; }
+  .ms .fb { color: var(--muted); font-style: italic; }
+
+  .check { list-style: none; padding-left: 0; }
+  .check li { display: flex; gap: 10px; align-items: flex-start; padding: 7px 0; border-bottom: 1px dashed var(--border); }
+  .check li:last-child { border-bottom: none; }
+  .check .k { font-weight: 800; color: var(--accent-2); min-width: 28px; }
+
+  footer { color: var(--muted); font-size: 13px; text-align: center; margin-top: 30px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <h1>🌙 Moonshot</h1>
+    <div class="tag">Interactive Lo-fi YouTube Live Channel</div>
+    <div class="sub">Project handoff — original draft, research, decisions, and the road ahead.</div>
+    <div class="date">Session: 2026-06-22 · Read top to bottom to get fully caught up.</div>
+  </header>
+
+  <section>
+    <h2><span class="num">1</span> The project in one line</h2>
+    <div class="callout oneliner">
+      A <strong>24/7 interactive lo-fi scene</strong> with ambient music, where comments on a live
+      YouTube channel are read automatically and an <strong>AI agent turns those comment
+      instructions into real-time scene changes</strong>.
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">2</span> Original draft plan <span class="muted" style="font-size:13px;font-weight:400;">(baseline we iterate from)</span></h2>
+
+    <h3>Stage 1 — Lovable scene + control interface</h3>
+    <ul>
+      <li>Implement a lovable scene (2D or 3D) + pick a few lo-fi ambient tracks.</li>
+      <li>Build the scene demo <strong>and</strong> expose interface APIs/tools so an external system can control the scene's parameters/behavior.</li>
+    </ul>
+
+    <h3>Stage 1 (cont.) — Agentic system</h3>
+    <ul>
+      <li>Design + implement an agentic system that turns instructions into scene manipulations using that control interface, so any input modifies the scene.</li>
+    </ul>
+
+    <h3>Stage 2 — Turn the local demo into a YouTube channel</h3>
+    <ul>
+      <li>Research how to make a virtual scene into a YouTube live channel.</li>
+      <li>Handle real-world challenges: parallel instructions, caching, speed.</li>
+    </ul>
+
+    <p class="muted">Original intent: plan is a draft, subject to change; split into small, clear steps with clear feedback to stay motivated.</p>
+  </section>
+
+  <section>
+    <h2><span class="num">3</span> What the research changed</h2>
+    <ol>
+      <li><strong>The hard part is NOT the scene or the streaming</strong> — both are commodity (OBS + Browser Source → RTMP; chat-reading AI agents already exist). The novel/risky part is the <strong>agent layer that turns messy chat into safe, coherent scene changes under concurrency</strong>. Spend effort there.</li>
+      <li><strong>Key architectural insight:</strong> the scene's control API <strong>is</strong> the LLM tool schema. Design them together.
+        <div class="flow" style="margin-top:8px;">
+          <span class="box">Chat</span><span class="arrow">→</span>
+          <span class="box">Agent (LLM + tools)</span><span class="arrow">→</span>
+          <span class="box">{tool, params} JSON</span><span class="arrow">→</span>
+          <span class="box">Scene API</span><span class="arrow">→</span>
+          <span class="box">Render</span>
+        </div>
+      </li>
+      <li><strong>YouTube chat quota wall:</strong> 10,000 units/day per project; naive polling exhausts it. Build all agent work against a <strong>fake chat feed</strong>; touch the real API only at the end. Prefer <code>liveChatMessages.streamList</code>, respect <code>pollingIntervalMillis</code>.</li>
+      <li><strong>Concurrency is the boss fight</strong> — promoted to its own milestone (M5).</li>
+      <li><strong>Latency/cost:</strong> cache common intents; add a cheap classifier before the expensive LLM.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="num">4</span> Decisions locked</h2>
+    <table>
+      <thead><tr><th>Decision</th><th>Choice</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Render style</td><td><strong>3D scene</strong> (Three.js)</td><td>User is more fluent in the 3D pipeline; richer, more natural agent control surface</td></tr>
+        <tr><td>Stack</td><td><strong>Three.js</strong></td><td>Real cameras, lights, materials + <code>ShaderMaterial</code> and <code>EffectComposer</code> post-processing; fits user's 3D + shader background</td></tr>
+        <tr><td>Mood engine</td><td><strong>3D lighting + post passes</strong> (grade · grain · bloom · vignette) via EffectComposer</td><td>Light color/intensity, fog, sun angle, camera, transforms become continuous agent-controllable parameters</td></tr>
+        <tr><td>GPU cost</td><td><strong>Deferred</strong></td><td>Set aside for now; a deployment concern that resurfaces only at M6, not an architecture concern</td></tr>
+        <tr><td>LLM provider</td><td><strong>Decide at M4</strong> — scene built provider-agnostic</td><td>No need to commit now</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      <strong>Three.js over PixiJS</strong> <span class="muted">(revised 2026-06-22):</span> the learning-curve argument that favored 2D doesn't apply — user is <em>more</em> comfortable in 3D. With GPU cost deferred, 3D wins on what matters most: a richer control surface for the agent. 3D exposes continuous, semantic parameters (camera pos/FOV, light color/intensity, fog density, sun angle, transforms) that map cleanly onto LLM tool calls — e.g. <code>"late afternoon"</code> → agent dials sun angle + warm light + fog. Plus a free cinematic/moving camera. The core architecture rule is unchanged; only M1–M3 change.
+    </div>
+    <div class="callout" style="border-left-color:var(--accent-2);">
+      ⚠️ <strong>M1 scope discipline:</strong> lo-fi mood in 3D leans on lighting/post tuning, which can rabbit-hole. Keep M1 minimal — low-poly/primitive scene, one light, simple camera, ONE post pass to prove the pipeline. Cozy comes later; pipeline-working comes first.
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">5</span> Resolution of the working checklist</h2>
+    <ul class="check">
+      <li><span class="k">1</span><div><span class="pill done">DONE</span> <strong>Fake comments first</strong> — all of stage 2 built vs a fake chat feed.</div></li>
+      <li><span class="k">2</span><div><span class="pill done">DONE</span> <strong>Concurrency / queue / caching / classifier</strong> (items 2, 2.1, 2.2, 5) — promoted to milestone <strong>M5</strong>: command queue with batching, conflict resolution, rate limiting, intent caching, cheap pre-classifier; sliding window combines max N commands per tick.</div></li>
+      <li><span class="k">3</span><div><span class="pill done">DONE</span> <strong>2D or 3D MVP</strong> → resolved to <strong>3D / Three.js</strong> (revised from 2.5D/PixiJS once 3D fluency confirmed + GPU cost deferred).</div></li>
+      <li><span class="k">4</span><div><span class="pill done">DONE</span> <strong>Control API = tool schema</strong> — adopted as the core architectural rule.</div></li>
+      <li><span class="k">6</span><div><span class="pill todo">M7</span> <strong>Wire YouTube comments into the rendered page</strong> — after the agent works locally; quota-safe.</div></li>
+      <li><span class="k">7</span><div><span class="pill open">OPEN</span> TBD.</div></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="num">6</span> Milestones <span class="muted" style="font-size:13px;font-weight:400;">(each ends in something visible)</span></h2>
+
+    <div class="stage-title">Stage 1 — Scene + control API (local)</div>
+    <div class="ms"><span class="code">M1</span><div>Minimal lit 3D scene renders. <span class="fb">Looks nice.</span></div></div>
+    <div class="ms"><span class="code">M2</span><div>JS control API (<code>window.scene.setX(...)</code>) + debug panel. <span class="fb">Click → change.</span></div></div>
+    <div class="ms"><span class="code">M3</span><div>Ambient music + track switching via same API. <span class="fb">Audio responds.</span></div></div>
+
+    <div class="stage-title">Stage 2 — Agentic control (local, fake chat)</div>
+    <div class="ms"><span class="code">M4</span><div>Tool schema (= M2 API) + LLM emits tool calls. <span class="fb">"rainy at night" works.</span></div></div>
+    <div class="ms"><span class="code">M5</span><div>Command queue + conflict/rate/cache/classifier vs simulated burst. <span class="fb">20 fake comments don't break the scene.</span></div></div>
+
+    <div class="stage-title">Stage 3 — Go live</div>
+    <div class="ms"><span class="code">M6</span><div>OBS Browser Source → YouTube RTMP (unlisted test). <span class="fb">Scene live on YouTube.</span></div></div>
+    <div class="ms"><span class="code">M7</span><div>Real YouTube chat (quota-safe) → M5 queue. <span class="fb">Real comment moves scene.</span></div></div>
+    <div class="ms"><span class="code">M8</span><div>Hardening — caching, moderation, 24/7 stability.</div></div>
+  </section>
+
+  <section>
+    <h2><span class="num">7</span> Next action — M1 spec</h2>
+    <p>Three.js + Vite + TypeScript scaffold; minimal scene (room box / a few low-poly or primitive objects); one directional light; simple camera; ONE EffectComposer post pass (vignette + color grade) to prove the pipeline; gentle idle animation; runs at <code>npm run dev</code>.</p>
+    <div class="callout"><strong>Done when:</strong> localhost shows a minimal lit 3D scene with a working post-processing pass.</div>
+  </section>
+
+  <section>
+    <h2><span class="num">8</span> Environment</h2>
+    <ul>
+      <li>Dir: <code>/Users/mac/Desktop/Projects/moonshot</code> (fresh)</li>
+      <li>Node <code>v22.22.3</code>, npm <code>10.9.8</code></li>
+      <li>Not a git repo yet</li>
+    </ul>
+  </section>
+
+  <footer>Moonshot handoff · generated 2026-06-22</footer>
+
+</div>
+</body>
+</html>
