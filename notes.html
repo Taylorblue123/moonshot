@@ -179,18 +179,20 @@
     <table>
       <thead><tr><th>Decision</th><th>Choice</th><th>Why</th></tr></thead>
       <tbody>
-        <tr><td>Render style</td><td><strong>3D scene</strong> (Three.js)</td><td>User is more fluent in the 3D pipeline; richer, more natural agent control surface</td></tr>
-        <tr><td>Stack</td><td><strong>Three.js</strong></td><td>Real cameras, lights, materials + <code>ShaderMaterial</code> and <code>EffectComposer</code> post-processing; fits user's 3D + shader background</td></tr>
-        <tr><td>Mood engine</td><td><strong>3D lighting + post passes</strong> (grade · grain · bloom · vignette) via EffectComposer</td><td>Light color/intensity, fog, sun angle, camera, transforms become continuous agent-controllable parameters</td></tr>
-        <tr><td>GPU cost</td><td><strong>Deferred</strong></td><td>Set aside for now; a deployment concern that resurfaces only at M6, not an architecture concern</td></tr>
+        <tr><td>Visual target</td><td><strong>2.5D layered painterly scene</strong> (the reference: grass hill + fence + cumulus sky + lone character + butterflies, lo-fi dusk)</td><td>The reference's beauty is painterly layered art + parametric animation + atmosphere — NOT a true-3D world</td></tr>
+        <tr><td>Render style</td><td><strong>2.5D</strong> — textured layer-quads at different <code>z</code>, gentle parallax camera</td><td>Real depth + a real camera, but the scene stays flat/painterly</td></tr>
+        <tr><td>Stack</td><td><strong>Three.js as a 2.5D compositor</strong></td><td>Free texture loading, scene graph, render loop, mature <code>EffectComposer</code>; per-layer look = custom <code>ShaderMaterial</code> (user's GLSL stays central). Easiest path + learns the standard lib.</td></tr>
+        <tr><td>Mood engine</td><td><strong>Per-layer GLSL + EffectComposer post stack</strong> (grade · grain · bloom · vignette)</td><td>Every layer's animation/look + global mood are shader uniforms → the agent's control surface</td></tr>
+        <tr><td>Escape hatch</td><td><strong>OGL</strong> if Three.js abstraction chafes</td><td>Architecture (layered quads + uniforms + post pass) is identical → low-cost pivot. Not expected.</td></tr>
+        <tr><td>GPU cost</td><td><strong>Deferred</strong></td><td>Deployment concern, resurfaces only at M6. 2.5D is far cheaper than true 3D anyway.</td></tr>
         <tr><td>LLM provider</td><td><strong>Decide at M4</strong> — scene built provider-agnostic</td><td>No need to commit now</td></tr>
       </tbody>
     </table>
     <div class="callout">
-      <strong>Three.js over PixiJS</strong> <span class="muted">(revised 2026-06-22):</span> the learning-curve argument that favored 2D doesn't apply — user is <em>more</em> comfortable in 3D. With GPU cost deferred, 3D wins on what matters most: a richer control surface for the agent. 3D exposes continuous, semantic parameters (camera pos/FOV, light color/intensity, fog density, sun angle, transforms) that map cleanly onto LLM tool calls — e.g. <code>"late afternoon"</code> → agent dials sun angle + warm light + fog. Plus a free cinematic/moving camera. The core architecture rule is unchanged; only M1–M3 change.
+      <strong>Stack evolution:</strong> 2.5D/PixiJS → 3D/Three.js (2026-06-22) → <strong>2.5D-in-Three.js</strong> (2026-06-25, after the reference image). The reference target is painterly layered art, not a true-3D world: full 3D would <em>fight its own renderer</em> to look painterly, and cloud-density/weather are hard in true 3D (volumetrics) but natural in 2.5D. <strong>PixiJS ruled out</strong> — its grain is 2D sprites, but our look is built from custom shaders + a post-FX chain, which is Three.js's strength. PixiJS would be easier ONLY for plain sprite parallax with no custom shaders.
     </div>
     <div class="callout" style="border-left-color:var(--accent-2);">
-      ⚠️ <strong>M1 scope discipline:</strong> lo-fi mood in 3D leans on lighting/post tuning, which can rabbit-hole. Keep M1 minimal — low-poly/primitive scene, one light, simple camera, ONE post pass to prove the pipeline. Cozy comes later; pipeline-working comes first.
+      ⚠️ <strong>MVP scope discipline:</strong> the mood comes from shaders + post-processing, which can rabbit-hole. Build the scene layer by layer; prove the pipeline (textured quad → custom shader → post pass → screen) on ONE layer first, then add layers and polish.
     </div>
   </section>
 
@@ -199,7 +201,7 @@
     <ul class="check">
       <li><span class="k">1</span><div><span class="pill done">DONE</span> <strong>Fake comments first</strong> — all of stage 2 built vs a fake chat feed.</div></li>
       <li><span class="k">2</span><div><span class="pill done">DONE</span> <strong>Concurrency / queue / caching / classifier</strong> (items 2, 2.1, 2.2, 5) — promoted to milestone <strong>M5</strong>: command queue with batching, conflict resolution, rate limiting, intent caching, cheap pre-classifier; sliding window combines max N commands per tick.</div></li>
-      <li><span class="k">3</span><div><span class="pill done">DONE</span> <strong>2D or 3D MVP</strong> → resolved to <strong>3D / Three.js</strong> (revised from 2.5D/PixiJS once 3D fluency confirmed + GPU cost deferred).</div></li>
+      <li><span class="k">3</span><div><span class="pill done">DONE</span> <strong>2D or 3D MVP</strong> → resolved to <strong>2.5D layered painterly scene in Three.js</strong> (used as a compositor). Evolution: 2.5D/PixiJS → 3D/Three.js → 2.5D-in-Three.js. MVP = the reference scene.</div></li>
       <li><span class="k">4</span><div><span class="pill done">DONE</span> <strong>Control API = tool schema</strong> — adopted as the core architectural rule.</div></li>
       <li><span class="k">6</span><div><span class="pill todo">M7</span> <strong>Wire YouTube comments into the rendered page</strong> — after the agent works locally; quota-safe.</div></li>
       <li><span class="k">7</span><div><span class="pill open">OPEN</span> TBD.</div></li>
@@ -210,7 +212,7 @@
     <h2><span class="num">6</span> Milestones <span class="muted" style="font-size:13px;font-weight:400;">(each ends in something visible)</span></h2>
 
     <div class="stage-title">Stage 1 — Scene + control API (local)</div>
-    <div class="ms"><span class="code">M1</span><div>Minimal lit 3D scene renders. <span class="fb">Looks nice.</span></div></div>
+    <div class="ms"><span class="code">M1</span><div>2.5D layered scene renders (sky → clouds → fence/hill → grass → butterflies) with per-layer shaders + one post-FX pass + parallax/idle motion. <span class="fb">Looks like the reference.</span></div></div>
     <div class="ms"><span class="code">M2</span><div>JS control API (<code>window.scene.setX(...)</code>) + debug panel. <span class="fb">Click → change.</span></div></div>
     <div class="ms"><span class="code">M3</span><div>Ambient music + track switching via same API. <span class="fb">Audio responds.</span></div></div>
 
@@ -225,21 +227,96 @@
   </section>
 
   <section>
-    <h2><span class="num">7</span> Next action — M1 spec</h2>
-    <p>Three.js + Vite + TypeScript scaffold; minimal scene (room box / a few low-poly or primitive objects); one directional light; simple camera; ONE EffectComposer post pass (vignette + color grade) to prove the pipeline; gentle idle animation; runs at <code>npm run dev</code>.</p>
-    <div class="callout"><strong>Done when:</strong> localhost shows a minimal lit 3D scene with a working post-processing pass.</div>
+    <h2><span class="num">7</span> Next action — M1 spec (2.5D layered scene)</h2>
+    <p><strong>Reference:</strong> Antent "end of era / ambient mix" — grass hill + black fence + giant cumulus sky + lone character silhouette + drifting blue butterflies, lo-fi dusk palette, subtle parallax + animation.</p>
+    <p><strong>Stack:</strong> Vite + Three.js + <strong>JavaScript</strong> (JS not TS — user preference; JSDoc typedefs for hints). Scene = textured/shaded quads stacked by <code>z</code>, gentle-perspective camera; per-layer look = custom <code>ShaderMaterial</code>; global mood = one EffectComposer post pass.</p>
+    <p><strong>Layer stack (far → near):</strong></p>
+    <ol>
+      <li><strong>Sky</strong> — gradient shader (dusk blue→pale), time-of-day uniform</li>
+      <li><strong>Stars + moon</strong> — points/sprite, twinkle + shooting-star uniform</li>
+      <li><strong>Cloud band</strong> — cumulus (noise shader or texture), drift by <code>uWind</code></li>
+      <li><strong>Fence + hill line</strong> — mostly static painted/textured plane</li>
+      <li><strong>Grass (mid)</strong> — grass texture/shader, vertex-sway by <code>uWind</code></li>
+      <li><strong>Foreground grass + butterflies</strong> — sway + instanced butterfly drift</li>
+      <li><strong>Post FX</strong> — color grade + vignette (+ grain) over the whole frame</li>
+    </ol>
+    <p><strong>Build order (each runnable):</strong> M1.0 scaffold → cleared canvas · M1.1 sky-gradient quad (first shader) · M1.2 camera + parallax · M1.3 cloud layer + <code>uWind</code> · M1.4 grass + sway · M1.5 butterflies · M1.6 stars/moon + character · M1.7 post-FX pass · M1.8 wire all through <code>params</code> + idle motion.</p>
+    <div class="callout"><strong>Done when:</strong> localhost shows a recognizably reference-like 2.5D dusk scene — drifting clouds, swaying grass, butterflies, post-FX mood — all values read from a single <code>params</code> object (ready for M2 to expose as the tool schema).</div>
   </section>
 
   <section>
-    <h2><span class="num">8</span> Environment</h2>
+    <h2><span class="num">8</span> Scene parameter list <span class="muted" style="font-size:13px;font-weight:400;">(the agent's control surface = the M2/M4 tool schema)</span></h2>
+    <p>Master list of what the agent can manipulate. <code>★</code> = <strong>broadcast</strong> param (one value, many layers subscribe). All continuous/enumerable → clean tool-call targets.</p>
+
+    <h3>Sky / time</h3>
     <ul>
-      <li>Dir: <code>/Users/mac/Desktop/Projects/moonshot</code> (fresh)</li>
+      <li><code>timeOfDay</code> ★ — sky gradient stops, light tint, star/moon visibility</li>
+      <li><code>skyTopColor</code>, <code>skyHorizonColor</code> — gradient endpoints</li>
+      <li><code>sunMoonPosition</code>, <code>sunMoonGlow</code>, <code>bodyType</code> (sun|moon|crescent)</li>
+      <li><code>starDensity</code>, <code>starTwinkleSpeed</code></li>
+      <li><code>shootingStarRate</code>, <code>shootingStarIntensity</code></li>
+    </ul>
+
+    <h3>Clouds</h3>
+    <ul>
+      <li><code>cloudCoverage</code> / <code>cloudDensity</code> (0–1) — the headline control</li>
+      <li><code>cloudType</code> (wispy ↔ cumulus ↔ storm)</li>
+      <li><code>cloudDriftSpeed</code>, <code>cloudDriftDirection</code></li>
+      <li><code>cloudColor</code> / <code>cloudTint</code>, <code>cloudHeight</code></li>
+    </ul>
+
+    <h3>Weather</h3>
+    <ul>
+      <li><code>precipType</code> (none | rain | snow | petals), <code>precipIntensity</code> (0–1)</li>
+      <li><code>fogDensity</code> / <code>haze</code>, <code>lightningRate</code> (storm only)</li>
+    </ul>
+
+    <h3>Wind ★</h3>
+    <ul>
+      <li><code>windStrength</code> (0–1), <code>windDirection</code> — consumed by grass sway, cloud drift, butterflies, precip slant</li>
+    </ul>
+
+    <h3>Foreground / life</h3>
+    <ul>
+      <li><code>butterflyCount</code>, <code>butterflySpeed</code>, <code>butterflyColor</code>, <code>butterflyBehavior</code> (calm|scatter)</li>
+      <li><code>grassColor</code> / <code>grassLushness</code>, <code>grassHeight</code></li>
+      <li><code>fireflyCount</code> (night), <code>leafCount</code> / <code>petalCount</code></li>
+      <li><code>characterVisible</code>, <code>characterPose</code> (later/optional)</li>
+    </ul>
+
+    <h3>Mood / post-FX (global)</h3>
+    <ul>
+      <li><code>colorTemperature</code>, <code>brightness</code>, <code>contrast</code>, <code>saturation</code></li>
+      <li><code>vignette</code> (0–1), <code>bloom</code> (0–1), <code>filmGrain</code> (0–1)</li>
+      <li><code>moodPreset</code> — macro setting a coherent bundle (<code>rainy_night</code>, <code>golden_hour</code>, <code>clear_dusk</code>); the agent's easiest high-level lever</li>
+    </ul>
+
+    <h3>Camera</h3>
+    <ul>
+      <li><code>parallaxAmount</code>, <code>parallaxSpeed</code> (subtle drift — NOT a cinematic flythrough)</li>
+      <li><code>zoom</code> (gentle), <code>cameraOffset</code></li>
+    </ul>
+
+    <h3>Audio (M3+)</h3>
+    <ul>
+      <li><code>track</code> (select/next), <code>volume</code></li>
+      <li><code>weatherAudioCoupling</code> (rain sound auto-plays with rain, etc.)</li>
+    </ul>
+
+    <div class="callout"><strong>Design note:</strong> expose both <strong>low-level knobs</strong> (e.g. <code>cloudCoverage</code>) AND <strong>high-level macros</strong> (<code>moodPreset</code>, <code>setWeather('storm')</code> that fans out to several knobs). The agent prefers macros for natural language ("make it stormy"); the M2 debug panel exposes the low-level knobs. Both map to the same <code>params</code>.</div>
+  </section>
+
+  <section>
+    <h2><span class="num">9</span> Environment</h2>
+    <ul>
+      <li>Dir: <code>/Users/mac/Desktop/Projects/moonshot</code> (git repo, branch <code>main</code>)</li>
       <li>Node <code>v22.22.3</code>, npm <code>10.9.8</code></li>
-      <li>Not a git repo yet</li>
+      <li>Scaffold in progress: <code>package.json</code>, <code>index.html</code>, <code>src/main.js</code> exist; <code>npm install</code> pending</li>
+      <li>User reads this rendered <code>notes.html</code>, not the <code>.md</code> — keep both in sync</li>
     </ul>
   </section>
 
-  <footer>Moonshot handoff · generated 2026-06-22</footer>
+  <footer>Moonshot handoff · updated 2026-06-25</footer>
 
 </div>
 </body>

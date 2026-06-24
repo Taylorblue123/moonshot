@@ -13,9 +13,11 @@ decisions — read it before starting work. Keep it updated as milestones land.
 
 ## What this is
 
-Moonshot is a 24/7 interactive lo-fi YouTube live channel: a 3D scene
-with ambient music where live YouTube chat comments are read automatically and an
-AI agent turns them into real-time scene changes.
+Moonshot is a 24/7 interactive lo-fi YouTube live channel: a 2.5D layered
+painterly scene (per the reference image — grass hill, fence, cumulus sky, lone
+character, butterflies, lo-fi dusk) with ambient music, where live YouTube chat
+comments are read automatically and an AI agent turns them into real-time scene
+changes.
 
 ## Core architecture
 
@@ -41,28 +43,42 @@ Two rules drive every design decision:
 
 ## Locked stack decisions
 
-- **Render: 3D scene** (Three.js). Chosen over 2.5D because the user is more
-  fluent in the 3D pipeline and 3D gives a richer, more natural agent control
-  surface (continuous semantic params: camera pos/FOV, light color/intensity, fog
-  density, sun angle, transforms). **GPU cost is deferred** — it's a deployment
-  concern that resurfaces only at M6, not an architecture concern.
-- **Three.js** — real cameras, lights, materials + `ShaderMaterial` and
-  `EffectComposer` post-processing. The lo-fi mood comes from **3D lighting + a
-  post-processing pass stack** (grade · grain · bloom · vignette); the lighting
-  params and shader uniforms become the agent-controllable parameters.
+- **Visual target: 2.5D layered painterly scene** matching the reference. The
+  reference's beauty is painterly layered art + parametric animation + atmosphere,
+  NOT a true-3D world. A full-3D scene would fight its own renderer to look
+  painterly, and cloud-density/weather are hard in true 3D (volumetrics) but
+  natural in 2.5D.
+- **Render: 2.5D** — textured layer-quads at different `z`, gentle parallax camera.
+- **Stack: Three.js used as a 2.5D compositor.** Gives free texture loading, scene
+  graph, render loop, and `EffectComposer`; each layer's look is a custom
+  `ShaderMaterial` (the user's GLSL skills stay central). Easiest path here, and
+  the user still learns the standard lib. PixiJS was ruled out (its grain is 2D
+  sprites; our look is custom shaders + a post-FX chain = Three.js's strength).
+  **OGL** is a noted escape hatch if Three.js abstraction chafes — same scene
+  architecture, low-cost pivot.
+- **Language: JavaScript** (not TypeScript) — user preference; use JSDoc typedefs
+  for editor hints. Migrate individual files to `.ts` later if desired (e.g. the
+  agent↔tool-schema boundary at M4).
+- **GPU cost: deferred** to M6 (deployment concern; 2.5D is cheap anyway).
 - **LLM provider: decided at M4.** Build the scene provider-agnostic until then.
-- Planned scaffold: **Vite + TypeScript + Three.js.**
+- Scaffold: **Vite + Three.js + JavaScript.**
 
-> M1 scope discipline: lo-fi mood in 3D leans on lighting/post tuning, which can
-> rabbit-hole. Keep M1 minimal — primitives + one light + simple camera + ONE
-> post pass. Cozy comes later.
+> MVP scope discipline: the mood comes from shaders + post-processing, which can
+> rabbit-hole. Build the scene layer by layer; prove the pipeline (textured quad →
+> custom shader → post pass → screen) on ONE layer first, then add layers/polish.
+> Route ALL tunable values through a single `params` object from the start so M2's
+> control API is a no-op, not a refactor.
+
+See `docs/specs/m1.md` for the full M1 spec and `notes.md` (rendered: `notes.html`)
+for the full parameter list.
 
 ## Milestones (each ends in something visible)
 
 Stage 1 — Scene + control API (local)
-- **M1** Minimal lit 3D scene renders (primitives/low-poly + one directional light
-  + simple camera) with one EffectComposer post pass (vignette + color grade) +
-  gentle idle animation. *Looks nice.*
+- **M1** 2.5D layered scene renders (sky → clouds → fence/hill → grass →
+  foreground butterflies) with per-layer custom shaders + one EffectComposer post
+  pass + gentle parallax/idle motion, all driven by a `params` object. *Looks like
+  the reference.* (Full spec: `docs/specs/m1.md`.)
 - **M2** JS control API (`window.scene.setX(...)`) + debug panel. *Click → change.*
 - **M3** Ambient music + track switching via same API. *Audio responds.*
 
