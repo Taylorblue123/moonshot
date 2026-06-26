@@ -1,17 +1,11 @@
-// ─────────────────────────────────────────────────────────────────────────
-// params.js — the SINGLE source of tunable scene state for Moonshot M1.
+// params.js — the SINGLE source of tunable scene state.
 //
-// Architecture rule (non-negotiable, see docs/tasks/m1/plan.md §1):
-//   ALL tunable values live here. Every layer/module reads from this object
-//   every frame and writes shader uniforms from it. Nothing tunable is
-//   hardcoded in rendering code. This is what makes the scene "fully
-//   parameter-driven" (M1 DoD #4) and turns M2's control API into thin
-//   setters over this object instead of a refactor.
+// Architecture rule (non-negotiable): ALL tunable values live here; nothing
+// tunable is hardcoded in rendering code. This keeps the scene params-driven
+// and turns M2's control API into thin setters, not a refactor.
 //
-// This is the M1 "clear-dusk" subset of the full parameter list
-// (full list in notes.md §8 / notes.html §8). Some keys are forward-looking
-// HOOKS for later milestones (e.g. `weather`) and do not affect the scene yet.
-// ─────────────────────────────────────────────────────────────────────────
+// M1 "clear-dusk" subset. Some keys (e.g. `weather`) are forward-looking hooks
+// for later milestones and do not affect the scene yet.
 
 /**
  * @typedef {Object} StarsParams

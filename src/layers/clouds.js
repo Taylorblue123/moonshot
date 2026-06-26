@@ -1,26 +1,17 @@
-// ─────────────────────────────────────────────────────────────────────────
-// layers/clouds.js — z=3 Clouds layer (see plan.md §3).
-//
-// A painterly cumulus band that drifts horizontally under the BROADCAST wind
-// value (params.wind), introducing the `uWind` pattern that grass + butterflies
-// reuse later. Procedural-first: an fbm cloud shader on a transparent quad so
-// the sky layer shows through the gaps.
-//
-// Conforms to the §5 layer module contract:
-//   { object3d, update(params, dt, t), dispose(), resize?(camera) }
-// ─────────────────────────────────────────────────────────────────────────
+// layers/clouds.js — Clouds layer: a painterly cumulus band that drifts under
+// the BROADCAST wind value (params.wind, shared with grass + butterflies).
 import * as THREE from "three";
 
 import vertexShader from "../shaders/clouds.vert?raw";
 import fragmentShader from "../shaders/clouds.frag?raw";
 
 // In front of the sky (z=-10), behind the future ridge. Depth is z-order only
-// (the camera is fixed — no parallax; plan.md §4).
+// (the camera is fixed — no parallax).
 const CLOUDS_Z = -8;
 
 /**
- * World-space frustum size at `dist` in front of the perspective camera, padded
- * so the quad always overfills the frame (any aspect / resize state).
+ * World-space frustum size at `dist` in front of the camera, padded so the quad
+ * always overfills the frame (any aspect / resize state).
  * @param {THREE.PerspectiveCamera} camera
  * @param {number} dist
  * @returns {{ width: number, height: number }}
@@ -43,7 +34,7 @@ export function createCloudsLayer(scene, params) {
   const material = new THREE.ShaderMaterial({
     vertexShader,
     fragmentShader,
-    // Uniforms seeded FROM params — not literals. update() keeps them live.
+    // Seeded from params, not literals; update() keeps them live.
     uniforms: {
       uTime: { value: 0 },
       uWind: { value: 0 }, // accumulated scroll offset (advanced in update)
@@ -52,7 +43,7 @@ export function createCloudsLayer(scene, params) {
       uTint: { value: new THREE.Color(params.clouds.tint) },
     },
     transparent: true, // alpha mask lets the sky show through gaps
-    depthTest: false, // it's a backdrop band; never occluded by the sky
+    depthTest: false, // backdrop band; never occluded by the sky
     depthWrite: false, // don't pollute depth for nearer layers
   });
 
@@ -62,7 +53,6 @@ export function createCloudsLayer(scene, params) {
   mesh.frustumCulled = false; // deliberately oversized; never cull
 
   /**
-   * Fit the quad to overfill the current frustum at the clouds' depth.
    * @param {THREE.PerspectiveCamera} camera
    */
   function resize(camera) {
@@ -72,8 +62,6 @@ export function createCloudsLayer(scene, params) {
   }
 
   /**
-   * Per-frame update: advance the wind scroll from the BROADCAST params.wind,
-   * and refresh coverage/height/tint from params so edits show live.
    * @param {import('../params.js').SceneParams} p
    * @param {number} dt delta seconds
    * @param {number} t  elapsed seconds
