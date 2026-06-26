@@ -1,18 +1,9 @@
-// clouds.frag — procedural painterly cumulus band.
-//
-// A soft, billowy horizontal band of cloud generated with value-noise fbm.
-// The band:
-//   • scrolls horizontally by uWind (broadcast wind; see plan.md §4),
-//   • is masked to a vertical band centred on uHeight,
-//   • has its amount of sky-cover controlled by uCoverage,
-//   • is tinted by uTint,
-//   • outputs ALPHA so the sky layer shows through the gaps.
-//
-// Procedural-first per plan §7. No color/threshold is hardcoded as a tunable —
-// every knob arrives as a uniform seeded from params.{clouds,wind}.
+// clouds.frag — procedural painterly cumulus band (value-noise fbm), output as
+// ALPHA so the sky shows through the gaps. No color/threshold is hardcoded as a
+// tunable; every knob arrives as a uniform seeded from params.{clouds,wind}.
 //
 // Seamless scroll: fbm is sampled at a continuous coordinate (vUv.x*scale +
-// uWind), so there is no tiling seam as uWind grows.
+// uWind), so there is no tiling seam as the broadcast wind grows uWind.
 
 precision highp float;
 
@@ -24,7 +15,6 @@ uniform vec3  uTint;     // cloud color
 
 varying vec2 vUv;
 
-// --- value noise -----------------------------------------------------------
 float hash(vec2 p) {
   p = fract(p * vec2(123.34, 345.45));
   p += dot(p, p + 34.345);

@@ -1,0 +1,9 @@
+node_modules
+dist
+.vite
+
+# Hand-maintained docs — don't let the formatter churn them
+docs
+plans
+notes.md
+notes.html

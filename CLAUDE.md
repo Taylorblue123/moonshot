@@ -8,6 +8,11 @@ For every new feature/task/amendment: implement it in a **git worktree** (branch
 off `main`), then **ask the user to review**; only **merge into `main` after they
 accept**. Never build a change directly on `main`.
 
+## Code style
+
+- Formatter/linter own style: `npm run format` (Prettier), `npm run lint` (ESLint). Don't hand-police formatting.
+- Comments explain **why** (non-obvious decisions, gotchas) — never **what** the code/API does. No teaching/tutorial comments in source.
+
 ## Project status
 
 **M1 in progress.** Vite + Three.js scaffold exists and runs (`npm run dev`).
@@ -56,7 +61,7 @@ Two rules drive every design decision:
   NOT a true-3D world. A full-3D scene would fight its own renderer to look
   painterly, and cloud-density/weather are hard in true 3D (volumetrics) but
   natural in 2.5D.
-- **Render: 2.5D** — textured layer-quads at different `z`, gentle parallax camera.
+- **Render: 2.5D** — textured layer-quads at different `z`, **fixed** gentle-perspective camera (no parallax drift; decided 2026-06-26).
 - **Stack: Three.js used as a 2.5D compositor.** Gives free texture loading, scene
   graph, render loop, and `EffectComposer`; each layer's look is a custom
   `ShaderMaterial` (the user's GLSL skills stay central). Easiest path here, and
@@ -83,22 +88,25 @@ for the full parameter list.
 ## Milestones (each ends in something visible)
 
 Stage 1 — Scene + control API (local)
+
 - **M1** 2.5D layered scene renders (sky → clouds → fence/hill → grass →
   foreground butterflies) with per-layer custom shaders + one EffectComposer post
-  pass + gentle parallax/idle motion, all driven by a `params` object. *Looks like
-  the reference.* (Full spec: `docs/specs/m1.md`.)
-- **M2** JS control API (`window.scene.setX(...)`) + debug panel. *Click → change.*
-- **M3** Ambient music + track switching via same API. *Audio responds.*
+  pass + gentle parallax/idle motion, all driven by a `params` object. _Looks like
+  the reference._ (Full spec: `docs/specs/m1.md`.)
+- **M2** JS control API (`window.scene.setX(...)`) + debug panel. _Click → change._
+- **M3** Ambient music + track switching via same API. _Audio responds._
 
 Stage 2 — Agentic control (local, FAKE chat)
-- **M4** Tool schema (= the M2 API) + LLM emits tool calls. *"rainy at night" works.*
+
+- **M4** Tool schema (= the M2 API) + LLM emits tool calls. _"rainy at night" works._
 - **M5** Command queue with batching, conflict resolution, rate limiting, intent
   caching, and a cheap pre-classifier; sliding window combines max N commands per
-  tick. *20 fake comments don't break the scene.* **This is the boss fight.**
+  tick. _20 fake comments don't break the scene._ **This is the boss fight.**
 
 Stage 3 — Go live
-- **M6** OBS Browser Source → YouTube RTMP (unlisted test). *Scene live on YouTube.*
-- **M7** Real YouTube chat → M5 queue. *Real comment moves scene.*
+
+- **M6** OBS Browser Source → YouTube RTMP (unlisted test). _Scene live on YouTube._
+- **M7** Real YouTube chat → M5 queue. _Real comment moves scene._
 - **M8** Hardening — caching, moderation, 24/7 stability.
 
 ## YouTube API constraints (relevant at M7)
@@ -111,9 +119,8 @@ agent development happens against a fake chat feed first.
 
 Node v22.22.3, npm 10.9.8.
 
-## Expected commands (once M1 scaffold exists)
+## Commands
 
-A Vite project has not been created yet. After scaffolding, the standard commands
-will be `npm run dev` (M1 done = localhost shows the minimal lit 3D scene with a
-working post-processing pass), `npm run build`, and `npm run preview`. Update this
-section with the actual scripts once `package.json` exists.
+- `npm run dev` — Vite dev server (the scene at localhost).
+- `npm run build` — production build. `npm run preview` — serve the build.
+- `npm run format` — Prettier. `npm run lint` — ESLint (run before merging).

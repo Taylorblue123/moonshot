@@ -1,9 +1,5 @@
-// sky.vert — pass-through for the sky gradient quad.
-//
-// Three.js injects `position`, `uv`, `modelViewMatrix`, and
-// `projectionMatrix` automatically (its ShaderMaterial prologue). We only
-// forward the quad's UVs so the fragment shader can build a vertical gradient
-// from vUv.y (0 at bottom/horizon → 1 at top/zenith).
+// sky.vert — pass-through; forwards UVs so the fragment shader builds the
+// vertical gradient from vUv.y (0 at horizon → 1 at zenith).
 
 varying vec2 vUv;
 
