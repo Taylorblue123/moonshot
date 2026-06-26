@@ -1,66 +1,53 @@
-// =============================================================================
-// main.js — bootstrap the renderer and the render loop.
+// ─────────────────────────────────────────────────────────────────────────
+// main.js — Moonshot M1 entry point (2.5D layered painterly scene).
 //
-// WebGL/GL mental map:
-//   - WebGLRenderer  ≈ your `gl` context + canvas + viewport + clear setup,
-//                       all wrapped up. It owns the GL state machine.
-//   - renderer.render(scene, camera) ≈ your per-frame "clear, bind program,
-//                       set uniforms, draw everything" — but driven by the
-//                       scene graph instead of manual draw calls.
-//   - The animation loop (requestAnimationFrame) is STILL yours to write.
-//     Three.js does not hide the loop; it only hides what happens inside one
-//     render() call.
-// =============================================================================
-
-import * as THREE from 'three';
+// Owns only the renderer, the render loop, and the resize handler. The scene
+// graph (camera + all layers) is built and updated by scene.js, so adding
+// layers never touches this file.
+//
+// NOTE: This is the 2.5D-compositor scene. The true-3D icosahedron experiment
+// lives in src/sandbox.js (not part of M1).
+// ─────────────────────────────────────────────────────────────────────────
+import * as THREE from "three";
+import { params } from "./params.js";
+import { createScene } from "./scene.js";
 
 // --- The renderer: this is the `gl` context wrapper ------------------------
-// antialias: true  -> MSAA on the default framebuffer (like requesting a
-//                     multisampled context in raw WebGL).
+// antialias: true -> MSAA on the default framebuffer (like requesting a
+//                    multisampled context in raw WebGL).
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 
-// devicePixelRatio handling: on a Retina display the CSS pixel != hardware
-// pixel. In raw WebGL you'd size the drawingBuffer yourself; here we just tell
-// the renderer. Cap at 2 so 3x phones don't render 9x the pixels.
+// devicePixelRatio handling: on Retina, CSS pixel != hardware pixel. Cap at 2
+// so 3x phones don't render 9x the pixels.
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
 // Size the drawing buffer to the window. (≈ gl.viewport + canvas.width/height.)
 renderer.setSize(window.innerWidth, window.innerHeight);
 
 // The renderer made a <canvas>; mount it into our #app div.
-document.getElementById('app').appendChild(renderer.domElement);
+document.getElementById("app").appendChild(renderer.domElement);
 
-// --- Placeholder scene + camera --------------------------------------------
-// We need *a* scene and *a* camera just to call render(). Right now the scene
-// is empty, so all you'll see is the clear color. We flesh these out in Step 2+.
-const scene = new THREE.Scene();
-
-// A background color = your glClearColor. Three.js clears to this each frame.
-scene.background = new THREE.Color(0x12131a); // dark slate (lo-fi night base)
-
-// Minimal camera so render() is happy. We design the real one in scene.js next.
-const camera = new THREE.PerspectiveCamera(
-  45,                                     // FOV in degrees (vertical)
-  window.innerWidth / window.innerHeight, // aspect ratio
-  0.1,                                    // near plane
-  100                                     // far plane
-);
-camera.position.set(0, 0, 5);
+// --- Scene (camera + all layers) -------------------------------------------
+// scene.js assembles everything from `params`; main.js just drives it.
+const { scene, camera, update, resize } = createScene(params);
 
 // --- The render loop --------------------------------------------------------
-// setAnimationLoop is Three.js's requestAnimationFrame wrapper. It also does
-// the right thing for WebXR/headless later. The callback runs once per frame.
+// setAnimationLoop is Three.js's requestAnimationFrame wrapper. A Clock gives
+// us dt (delta) and t (elapsed) seconds for time-based animation; the scene
+// reads `params` every frame.
+const clock = new THREE.Clock();
 function tick() {
-  // (Per-frame updates will go here in later steps — animation, etc.)
+  const dt = clock.getDelta(); // seconds since last frame
+  const t = clock.getElapsedTime(); // seconds since start
+  update(params, dt, t); // fan out to every layer (camera is fixed)
   renderer.render(scene, camera); // clear + draw the scene from the camera
 }
 renderer.setAnimationLoop(tick);
 
 // --- Keep it sharp on window resize ----------------------------------------
-// Same idea as a resize handler in raw WebGL: update viewport + the camera's
-// projection matrix (aspect changed, so the projection must be recomputed).
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix(); // projection matrix is cached; force rebuild
+// Renderer sizing lives here (main.js owns the renderer); camera + layer refit
+// is delegated to the scene.
+window.addEventListener("resize", () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
+  resize(window.innerWidth, window.innerHeight);
 });

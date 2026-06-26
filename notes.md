@@ -66,7 +66,7 @@ with clear feedback to stay motivated.
 | Decision | Choice | Why |
 |---|---|---|
 | Visual target | **2.5D layered painterly scene** matching the reference (Antent "end of era" — grass hill + fence + cumulus sky + lone character + butterflies, lo-fi dusk) | The beauty in the reference is *painterly layered art + parametric animation + atmosphere*, NOT a true-3D world |
-| Render style | **2.5D** — textured layer-quads at different `z`, gentle parallax camera | Real depth + a real camera, but the scene stays flat/painterly |
+| Render style | **2.5D** — textured layer-quads at different `z`, **fixed** gentle-perspective camera | Real depth via `z` order + overlap; camera does NOT move (decided 2026-06-26). All life comes from content motion (wind/clouds/butterflies), matching the static reference |
 | Stack | **Three.js as a 2.5D compositor** | Free texture loading, scene graph, render loop, and a mature `EffectComposer` post-FX chain; per-layer look is custom `ShaderMaterial` (user's GLSL skills stay central). Easiest path + user learns the standard lib. |
 | Mood engine | **Per-layer GLSL shaders + EffectComposer post stack** (grade · grain · bloom · vignette) | Every layer's animation/look and the global mood are shader uniforms → the agent's control surface |
 | Escape hatch | **OGL** if Three.js abstraction chafes | Scene architecture (layered quads + uniforms + post pass) is identical, so pivoting is low-cost. Not expected. |
@@ -112,7 +112,8 @@ sprite parallax with no custom shaders/post-FX — not our case.
 Stage 1 — Scene + control API (local)
 - **M1** 2.5D layered scene renders (reference look: sky → clouds → fence/hill →
   grass → foreground butterflies) with per-layer shaders + one post-FX pass +
-  gentle parallax/idle motion. *Looks like the reference.*
+  content motion (drifting clouds, swaying grass, fluttering butterflies; fixed
+  camera). *Looks like the reference.*
 - **M2** JS control API (`window.scene.setX(...)`) + debug panel. *Click → change.*
 - **M3** Ambient music + track switching via same API. *Audio responds.*
 
@@ -130,11 +131,11 @@ Stage 3 — Go live
 
 Reference: Antent "end of era / ambient mix" — grass hill + black fence + giant
 cumulus sky + lone character silhouette + drifting blue butterflies, lo-fi dusk
-palette, subtle parallax + animation.
+palette, gentle content animation (fixed camera).
 
 Stack: **Vite + Three.js + JavaScript** (JS not TS — user preference; JSDoc
 typedefs for editor hints). Scene = textured/shaded quads stacked by `z`, viewed
-by a gentle-perspective (or near-ortho) camera; per-layer look = custom
+by a gentle-perspective (or near-ortho) **fixed** camera; per-layer look = custom
 `ShaderMaterial`; global mood = one EffectComposer post pass.
 
 Layer stack (far → near):
@@ -148,7 +149,7 @@ Layer stack (far → near):
 
 Build order (step-by-step, each runnable):
 M1.0 scaffold → cleared canvas · M1.1 sky-gradient quad (first shader) ·
-M1.2 camera + parallax · M1.3 cloud layer + `uWind` · M1.4 grass + sway ·
+M1.2 scene.js layer assembler (fixed camera) · M1.3 cloud layer + `uWind` · M1.4 grass + sway ·
 M1.5 butterflies · M1.6 stars/moon + character silhouette · M1.7 post-FX pass ·
 M1.8 wire everything through `params` (see §6 architecture rule) + idle motion.
 
@@ -200,9 +201,11 @@ Two are **broadcast** params (one value, many layers subscribe): `wind` and
 - `moodPreset` — convenience macro that sets a coherent bundle (e.g. `rainy_night`,
   `golden_hour`, `clear_dusk`); the agent's easiest high-level lever
 
-**Camera**
-- `parallaxAmount`, `parallaxSpeed` (subtle drift — NOT a cinematic flythrough)
-- `zoom` (gentle), `cameraOffset`
+**Camera** (fixed — no drift in M1; decided 2026-06-26)
+- `fov`, `zoom` (gentle)
+- `cameraOffset` — static framing offset only (not animated)
+- *(dropped: `parallaxAmount` / `parallaxSpeed` — camera does not move; a drift
+  option could return later as an agent-controllable extra, but is out of scope)*
 
 **Audio** (M3+)
 - `track` (select/next), `volume`

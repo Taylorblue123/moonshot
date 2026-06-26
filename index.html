@@ -1,20 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Moonshot — M1</title>
-  <style>
-    /* Full-bleed canvas, no scrollbars. The renderer will fill this. */
-    html, body { margin: 0; height: 100%; overflow: hidden; background: #000; }
-    #app { width: 100vw; height: 100vh; display: block; }
-  </style>
-</head>
-<body>
-  <!-- The renderer creates its own <canvas> and appends it into #app. -->
-  <div id="app"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Moonshot — M1</title>
+    <style>
+      /* Full-bleed canvas, no scrollbars. The renderer will fill this. */
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+      }
+      #app {
+        width: 100vw;
+        height: 100vh;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- The renderer creates its own <canvas> and appends it into #app. -->
+    <div id="app"></div>
 
-  <!-- type="module" => browser-native ES modules; Vite serves/bundles them. -->
-  <script type="module" src="/src/main.js"></script>
-</body>
+    <!-- type="module" => browser-native ES modules; Vite serves/bundles them. -->
+    <script type="module" src="/src/main.js"></script>
+  </body>
 </html>
