@@ -2,14 +2,22 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Workflow (REQUIRED)
+
+For every new feature/task/amendment: implement it in a **git worktree** (branch
+off `main`), then **ask the user to review**; only **merge into `main` after they
+accept**. Never build a change directly on `main`.
+
 ## Project status
 
-**Pre-code / planning stage.** The repo currently contains only `notes.md` (the
-authoritative handoff + decision log) and `notes.html`. There is no scaffold,
-build, or test setup yet. The immediate task is **M1** (see Milestones).
+**M1 in progress.** Vite + Three.js scaffold exists and runs (`npm run dev`).
+Done: M1.0 scaffold, M1.1 sky (timeOfDay→gradient ramp), M1.2 scene assembler
+(fixed camera), M1.3 clouds (fbm band, broadcast `uWind`). Next: M1.4 ridge +
+grass (see `docs/tasks/m1/task_5.md`).
 
 `notes.md` is the source of truth for goals, research takeaways, and locked
 decisions — read it before starting work. Keep it updated as milestones land.
+Spec-driven docs live in `docs/specs/` (PRDs) + `docs/tasks/mN/` (plan + tasks).
 
 ## What this is
 
