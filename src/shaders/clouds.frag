@@ -11,7 +11,9 @@ uniform float uTime;     // elapsed seconds (slow internal evolution)
 uniform float uWind;     // accumulated horizontal scroll offset
 uniform float uCoverage; // 0..1 — more coverage = lower threshold = more cloud
 uniform float uHeight;   // 0..1 — vertical centre of the cloud band
-uniform vec3  uTint;     // cloud color
+uniform vec3  uTint;     // cloud color (artistic multiplier over the sky-derived base)
+uniform vec3  uSkyTint;  // sky-derived base color (from skyRamp) — keeps clouds in
+                         // step with the sky so they darken/shift toward night
 
 varying vec2 vUv;
 
@@ -52,8 +54,10 @@ void main() {
 
   float n = fbm(p);
 
-  // Vertical band mask: cloud lives near uHeight, fades above/below.
-  float band = 1.0 - smoothstep(0.0, 0.35, abs(vUv.y - uHeight));
+  // Vertical band mask: cloud lives near uHeight, fades above/below. Narrower
+  // falloff (was 0.35) keeps the band a compact strip near the top, not a wall
+  // that fills the frame and pushes the foreground out of view.
+  float band = 1.0 - smoothstep(0.0, 0.18, abs(vUv.y - uHeight));
 
   // Coverage maps to a density threshold: higher coverage -> lower threshold
   // so more of the noise survives as cloud. Soft edge via smoothstep.
@@ -62,7 +66,9 @@ void main() {
 
   // Subtle internal shading so cumulus reads as volumetric, not flat.
   float shade = mix(0.82, 1.0, smoothstep(0.3, 0.9, n));
-  vec3 color = uTint * shade;
+  // Base color tracks the sky (so clouds darken/shift toward night with the same
+  // timeOfDay the sky uses); uTint is an artistic multiplier on top.
+  vec3 color = uSkyTint * uTint * shade;
 
   gl_FragColor = vec4(color, clamp(density, 0.0, 1.0));
 }

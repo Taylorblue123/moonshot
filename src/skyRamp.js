@@ -69,3 +69,20 @@ export function skyColorsForTime(timeOfDay) {
     horizonColor: toHex(lerpRGB(lo.horizon, hi.horizon, local)),
   };
 }
+
+/**
+ * 0–1 "nightness" for a given time of day — ~1 deep night, ~0 broad daylight,
+ * smooth ramps at dawn/dusk. Lets night-only layers (fireflies, later stars)
+ * fade with the same clock the sky uses.
+ * @param {number} timeOfDay Hours, 0–24 (wraps).
+ * @returns {number}
+ */
+export function nightFactor(timeOfDay) {
+  let h = timeOfDay % 24;
+  if (h < 0) h += 24;
+  // Full night before ~5h and after ~20h; full day ~7h–18h; linear dawn/dusk ramps.
+  if (h <= 5 || h >= 20) return 1;
+  if (h >= 7 && h <= 18) return 0;
+  if (h < 7) return (7 - h) / 2; // dawn 5→7
+  return (h - 18) / 2; // dusk 18→20
+}

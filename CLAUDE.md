@@ -17,8 +17,12 @@ accept**. Never build a change directly on `main`.
 
 **M1 in progress.** Vite + Three.js scaffold exists and runs (`npm run dev`).
 Done: M1.0 scaffold, M1.1 sky (timeOfDay→gradient ramp), M1.2 scene assembler
-(fixed camera), M1.3 clouds (fbm band, broadcast `uWind`). Next: M1.4 ridge +
-grass (see `docs/tasks/m1/task_5.md`).
+(fixed camera), M1.3 clouds (fbm band, broadcast `uWind`), M1.4 hill (fbm ridge,
+wind breathing, night silhouette), M1.5 fireflies (Points, orbit drift + pulse,
+`timeOfDay` fade). `timeOfDay` now also drives cloud color + hill darkness via
+`skyRamp.js`. Foreground re-scoped: fence dropped, fireflies chosen as the life
+signal (see `docs/tasks/m1/task_5.md`, `task_6.md`). Next: M1.6 stars/moon +
+character silhouette.
 
 `notes.md` is the source of truth for goals, research takeaways, and locked
 decisions — read it before starting work. Keep it updated as milestones land.

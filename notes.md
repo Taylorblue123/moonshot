@@ -138,20 +138,32 @@ typedefs for editor hints). Scene = textured/shaded quads stacked by `z`, viewed
 by a gentle-perspective (or near-ortho) **fixed** camera; per-layer look = custom
 `ShaderMaterial`; global mood = one EffectComposer post pass.
 
-Layer stack (far → near):
-1. **Sky** — gradient shader (dusk blue→pale), time-of-day uniform
-2. **Stars + moon** — points/sprite, twinkle + shooting-star uniform
-3. **Cloud band** — cumulus (noise shader or cloud texture), drift by `uWind`
-4. **Fence + hill line** — mostly static painted/textured plane
-5. **Grass (mid)** — grass texture/shader, vertex-sway by `uWind`
-6. **Foreground grass + butterflies** — sway + instanced butterfly drift
-7. **Post FX** — color grade + vignette (+ grain) over the whole frame
+Layer stack (far → near) — *as built (2026-06-27); fence dropped, grass→hill,
+butterflies→fireflies; see build order below for the rationale:*
+1. **Sky** — gradient shader, `timeOfDay` ramp (`skyRamp.js`)  ✅
+2. **Stars + moon** — points/sprite, twinkle + shooting-star  *(later)*
+3. **Cloud band** — fbm cumulus, drift by `uWind`; color tracks the sky via
+   `skyRamp` (lift more by day, less at night) so clouds stay visible-not-glaring  ✅
+4. **Hill** — fbm-ridge ground mass, breathes with `uWind`, darkens into a
+   backlit silhouette at night via `timeOfDay`  ✅ *(was "fence + hill"; fence
+   dropped — procedural picket fence is a rabbit-hole with little payoff)*
+5. **Fireflies** — `THREE.Points` glowing motes above the ridge, elliptical-orbit
+   drift + alpha pulse, fade in/out by `timeOfDay`  ✅ *(was "grass + butterflies";
+   butterflies deferred to their own milestone — different technique)*
+6. **Post FX** — color grade + vignette (+ grain)  *(later)*
 
 Build order (step-by-step, each runnable):
 M1.0 scaffold → cleared canvas · M1.1 sky-gradient quad (first shader) ·
-M1.2 scene.js layer assembler (fixed camera) · M1.3 cloud layer + `uWind` · M1.4 grass + sway ·
-M1.5 butterflies · M1.6 stars/moon + character silhouette · M1.7 post-FX pass ·
+M1.2 scene.js layer assembler (fixed camera) · M1.3 cloud layer + `uWind` ·
+**M1.4 hill (fbm ridge + wind breathing + night silhouette)** ✅ ·
+**M1.5 fireflies (Points, orbit drift + pulse, night fade)** ✅ ·
+M1.6 stars/moon + character silhouette · M1.7 post-FX pass ·
 M1.8 wire everything through `params` (see §6 architecture rule) + idle motion.
+
+> M1.4/M1.5 note: the foreground was re-scoped to "lively, easy-to-code,
+> params-driven lo-fi" rather than a 1:1 reference copy — fence dropped,
+> fireflies chosen as the life signal. `timeOfDay` now also drives cloud color
+> and hill darkness (not just the sky), all through `skyRamp.js`.
 
 **Done when:** localhost shows a recognizably reference-like 2.5D dusk scene with
 drifting clouds, swaying grass, butterflies, and a post-FX mood pass — all values

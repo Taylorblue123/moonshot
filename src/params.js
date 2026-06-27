@@ -45,6 +45,15 @@
  */
 
 /**
+ * @typedef {Object} FirefliesParams
+ * @property {number} count       Number of fireflies (point count).
+ * @property {string} color       Hex glow tint.
+ * @property {number} driftSpeed  Elliptical-orbit + wind motion rate.
+ * @property {number} glow        0–1 halo size / intensity.
+ * @property {number} pulseSpeed  Alpha-breath (blink) rate.
+ */
+
+/**
  * @typedef {Object} CameraParams
  * @property {number} fov   Vertical field of view in degrees.
  * @property {number} zoom  Camera zoom multiplier.
@@ -79,6 +88,7 @@
  * @property {CloudsParams}      clouds
  * @property {WindParams}        wind          ★broadcast.
  * @property {GrassParams}       grass
+ * @property {FirefliesParams}   fireflies
  * @property {ButterfliesParams} butterflies
  * @property {CameraParams}      camera
  * @property {MoodParams}        mood
@@ -87,17 +97,24 @@
 
 /** @type {SceneParams} */
 export const params = {
-  timeOfDay: 7.0, // dusk (hours, 0–24)  ★broadcast — drives the sky gradient
+  timeOfDay: 20.0, // night (hours, 0–24)  ★broadcast — drives the sky gradient
   stars: { density: 0.4, twinkleSpeed: 1.0, shootingStarRate: 0.03 },
   clouds: {
-    coverage: 1.8,
+    coverage: 0.55,
     driftSpeed: 0.01,
     driftDir: 1,
     tint: "#ffffff",
-    height: 0.75,
+    height: 0.82,
   },
-  wind: { strength: 10.0, direction: 1 }, // ★broadcast
+  wind: { strength: 5.0, direction: 1.5 }, // ★broadcast
   grass: { color: "#243b3a", lushness: 0.7, height: 1.0 },
+  fireflies: {
+    count: 60,
+    color: "#cfe8a0",
+    driftSpeed: 0.3,
+    glow: 0.8,
+    pulseSpeed: 1.0,
+  },
   butterflies: { count: 40, speed: 0.5, color: "#8fb7ff", behavior: "calm" },
   camera: { fov: 40, zoom: 1.0 }, // fixed camera — no parallax drift in M1
   mood: {
