@@ -2,8 +2,34 @@
 // the BROADCAST wind value (params.wind, shared with grass + butterflies).
 import * as THREE from "three";
 
+import { skyColorsForTime, nightFactor } from "../skyRamp.js";
 import vertexShader from "../shaders/clouds.vert?raw";
 import fragmentShader from "../shaders/clouds.frag?raw";
+
+// Clouds read as masses lit by sky/moonlight, so they sit a notch BRIGHTER than
+// the sky behind them — never darker, or they vanish at night. We lift the sky's
+// own top color toward a soft cloud-grey.
+//
+// The lift amount can't be a single constant: by day clouds want a STRONG lift
+// (bright white against the bright sky), at night only a SMALL one (a faint
+// blue-grey, not a glaring patch). So the lift rides nightFactor between the two.
+const CLOUD_GREY = new THREE.Color(0.85, 0.86, 0.9);
+const CLOUD_LIFT_DAY = 0.8;
+const CLOUD_LIFT_NIGHT = 0.12;
+
+/**
+ * Sky-derived base tint for clouds: the sky's top color lifted toward cloud-grey
+ * (more by day, less at night) so clouds stay visible-but-not-glaring at any hour.
+ * @param {number} timeOfDay
+ * @returns {THREE.Color}
+ */
+function cloudSkyTint(timeOfDay) {
+  const { topColor } = skyColorsForTime(timeOfDay);
+  const lift =
+    CLOUD_LIFT_DAY +
+    (CLOUD_LIFT_NIGHT - CLOUD_LIFT_DAY) * nightFactor(timeOfDay);
+  return new THREE.Color(topColor).lerp(CLOUD_GREY, lift);
+}
 
 // In front of the sky (z=-10), behind the future ridge. Depth is z-order only
 // (the camera is fixed — no parallax).
@@ -41,6 +67,7 @@ export function createCloudsLayer(scene, params) {
       uCoverage: { value: params.clouds.coverage },
       uHeight: { value: params.clouds.height },
       uTint: { value: new THREE.Color(params.clouds.tint) },
+      uSkyTint: { value: cloudSkyTint(params.timeOfDay) },
     },
     transparent: true, // alpha mask lets the sky show through gaps
     depthTest: false, // backdrop band; never occluded by the sky
@@ -74,6 +101,7 @@ export function createCloudsLayer(scene, params) {
     material.uniforms.uCoverage.value = p.clouds.coverage;
     material.uniforms.uHeight.value = p.clouds.height;
     material.uniforms.uTint.value.set(p.clouds.tint);
+    material.uniforms.uSkyTint.value.copy(cloudSkyTint(p.timeOfDay));
   }
 
   function dispose() {

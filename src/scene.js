@@ -5,6 +5,8 @@
 import * as THREE from "three";
 import { createSkyLayer } from "./layers/sky.js";
 import { createCloudsLayer } from "./layers/clouds.js";
+import { createHillLayer } from "./layers/hill.js";
+import { createFirefliesLayer } from "./layers/fireflies.js";
 
 /**
  * @param {import('./params.js').SceneParams} params
@@ -38,6 +40,8 @@ export function createScene(params) {
   const layers = [
     sky,
     createCloudsLayer(scene, params), // drifts by broadcast wind
+    createHillLayer(scene, params), // ground mass; ridge breathes with broadcast wind
+    createFirefliesLayer(scene, params), // night motes; drift by wind, fade by day
   ];
   for (const layer of layers) {
     scene.add(layer.object3d);

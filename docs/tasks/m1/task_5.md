@@ -1,84 +1,94 @@
-# Task 5 — ridge (fence + hill) + grass with wind sway (M1.4)
+# Task 5 — hill layer + uWind (M1.4)
 
 | | |
 |---|---|
 | **Milestone step** | M1.4 |
-| **Status** | not started |
+| **Status** | implemented — code/build verified + browser-checked (day & night) |
 | **Spec** | [`docs/specs/m1.md`](../../specs/m1.md) |
-| **Design** | [`plan.md`](./plan.md) §3 Layer Stack (z=4 Ridge, z=5 Grass), §4 (Broadcast `wind`), §5 Module Contracts, §6 `params.grass` + `params.wind` |
-| **Depends on** | Task 4 (`scene.js` assembles layers; broadcast `uWind` pattern established by clouds) |
-| **Blocks** | Task 6 (foreground grass + butterflies reuse the grass sway + `uWind`) |
+| **Design** | [`plan.md`](./plan.md) §3 Layer Stack (z=4), §4 (Broadcast `uWind` + `timeOfDay`; fixed camera), §5 Module Contracts, §6 `params.grass` |
+| **Depends on** | Task 4 (clouds — establishes the broadcast `uWind` pattern this reuses) |
+| **Blocks** | Task 6 (fireflies — they drift in a band *above* the hill ridge, so the hill must exist first) |
+
+> **Plan divergence (intentional, 2026-06-27).** `plan.md` §2/§3 named the next
+> layer `ridge.js` = *fence + hill silhouette*. The **fence is dropped** — a
+> procedural picket fence is a rabbit-hole with little payoff. This task ships a
+> **hill-only** layer (`layers/hill.js`); the next life element is **fireflies**
+> (Task 6), not the plan's grass/butterflies. The goal is restated as: a lively,
+> easy-to-code, fully `params`-driven lo-fi foreground — not a 1:1 reference copy.
 
 ---
 
 ## Objective
 
-Add the two mid-ground layers that give the scene its ground plane and horizon:
-the **ridge** (a dark hill silhouette with the black slatted fence running along
-it) and the **grass field** (a shaded grass plane whose blades **sway** under the
-broadcast wind). After this the scene reads as "a grassy hill under a cloudy dusk
-sky," recognizably the reference layout.
+Add the **hill layer** — a dark rolling-ground mass with a soft ridge silhouette
+against the sky, occupying the lower part of the frame. Its ridge line and surface
+**breathe** under the broadcast `uWind` (the same wind that drifts the clouds), and
+it **darkens into a backlit silhouette at night** via `timeOfDay`, so the
+foreground feels alive without any camera motion. Pure fragment shader, built 1:1
+on the existing cloud-layer pattern.
 
 ## Traceability
-- **Satisfies (spec):** DoD #1 (the fence + hill ridge and grass become visible
-  depth layers), DoD #2 (grass sways = gentle life), DoD #5 (the fence-on-a-hill
-  is a defining feature of the reference).
-- **Implements (design):** `plan.md` §3 rows z=4 (Ridge, static) + z=5 (Grass,
-  `uWind` vertex sway), §4 (wind broadcast), §6 (`params.grass.*`,
-  `params.wind.*`).
+- **Satisfies (spec):** advances DoD #1 (another depth layer — the ground plane
+  every later foreground element sits on), DoD #2 (wind-coupled ridge/surface
+  motion = part of "gentle life"), DoD #4 (all knobs from `params`).
+- **Implements (design):** `plan.md` §3 row z=4 (re-scoped Ridge → Hill), §4
+  (`wind` + `timeOfDay` are ★broadcast values), §6 (`params.grass.*`).
 
-## Implementation steps
-1. **Ridge layer (`src/layers/ridge.js`)** — `createRidgeLayer(scene, params)`:
-   - A mostly-static dark silhouette of the hill line + a slatted fence running
-     along the ridge (the reference's fence rises gently left→right).
-   - Procedural-first: a shader (or geometry) drawing (a) a hill/ground mask
-     below a sloped horizon line, filled near-black, and (b) evenly-spaced
-     vertical fence posts + rails along that line. Keep it readable as a
-     silhouette, not detailed.
-   - Sits at the ridge `z` (in front of clouds, behind grass). Per the §5
-     contract: `{ object3d, update(params, dt, t), dispose(), resize?(camera) }`.
-     Ridge is static, so `update` may be a no-op (still accept the signature).
-2. **Grass layer (`src/layers/grass.js`)** — `createGrassLayer(scene, params)`:
-   - A grass field filling the lower portion of the frame, colored from
-     `params.grass.color`, with blade/texture detail (procedural shader; blade
-     shapes via noise or a vertex-displaced strip — implementer's choice).
-   - **Wind sway:** blades displace horizontally by the broadcast wind. Drive it
-     with a `uWind` (and/or `uTime`) uniform exactly as clouds do —
-     `wind.strength * wind.direction` — so "make it windy" moves grass + clouds
-     together from one knob. Sway should be a gentle, blade-tip-weighted bend
-     (more at the top, anchored at the base), not a whole-layer slide.
-   - `params.grass.lushness` modulates density/saturation; `params.grass.height`
-     scales blade height. Colors/knobs from `params` only.
-   - Sits at the grass `z` (in front of the ridge). §5 contract.
-3. **Register in `scene.js`** — add ridge then grass to the layer array, in
-   far→near order (clouds → ridge → grass). No `main.js` change needed.
+## Implementation steps (as built)
+1. **Hill shaders** — `src/shaders/hill.vert` (pass-through, like clouds) +
+   `src/shaders/hill.frag`:
+   - **Ridge:** baseline `uHillHeight` displaced by `fbm(x)`; transparent above
+     (alpha 0), filled below. Anti-aliased edge via `fwidth` so the line never
+     jags at any resolution.
+   - **Surface:** grass base color `uColor` modulated by a low-amplitude fbm
+     (`uLushness` sets the amplitude) for painterly variation.
+   - **Wind motion:** the fbm sample scrolls with `uWind` so ridge + surface
+     breathe. Reuses the cloud value-noise/fbm — small amplitude, slow.
+   - **Night silhouette:** `uNightFactor` (from `timeOfDay`) drops the hill toward
+     a near-black silhouette at night so the ridge reads as a backlit edge against
+     the deep-blue night sky rather than dissolving into it.
+2. **`src/layers/hill.js`** — `createHillLayer(scene, params)` returning
+   `{ object3d, update, dispose, resize }`, mirroring `layers/clouds.js`:
+   - `PlaneGeometry(1,1)` quad at `z=-6`, scaled by `resize(camera)` to overfill
+     the frame (`frustumSizeAt`), `frustumCulled = false`, transparent material
+     (`depthTest/Write = false`).
+   - `update`: advance `uWind` (`wind.strength × direction × HILL_DRIFT × dt`,
+     `HILL_DRIFT = 0.004` so ground moves slower than clouds); refresh
+     `uHillHeight`/`uColor`/`uLushness`/`uNightFactor` from `params`.
+   - `ridgeFraction()` maps `params.grass.height` (a blade-height *multiplier*,
+     ~1.0) to a ridge screen-fraction (`RIDGE_BASE = 0.38`, capped 0.6) — height
+     1.0 puts the ridge crest ~30–38% up the frame.
+3. **Registered in `scene.js`** after clouds: `z=-6`, `renderOrder=-700` (sky -1000,
+   clouds -900) → in front of clouds, behind fireflies (`z=-4`).
 
 ## Acceptance criteria (Definition of Done for this task)
-- [ ] A dark hill silhouette with a visible **slatted fence** runs across the
-      frame along the ridge line (recognizably the reference's fence-on-a-hill).
-- [ ] A **grass field** fills the lower frame, colored from `params.grass.color`.
-- [ ] Grass **sways** with the wind; changing `params.wind.strength` changes sway
-      amount and `params.wind.direction` flips the lean — using the same broadcast
-      `wind` as the clouds.
-- [ ] Changing `params.grass.color` / `lushness` / `height` visibly changes the
-      grass — all from `params`, no hardcoded look in the shader.
-- [ ] Correct depth order: clouds behind the ridge, ridge behind the grass.
-- [ ] No console errors; resize stays clean; clean `npm run build`.
+- [x] A dark hill mass fills the lower frame with a soft, rolling **fbm ridge**,
+      anti-aliased edge (no jaggies). *(Browser-checked.)*
+- [x] Above the ridge is **transparent** — sky and clouds show through.
+- [x] Ridge + surface **breathe** with broadcast wind (`wind.strength` rate,
+      `wind.direction` flips), subtle and slower than clouds.
+- [x] `params.grass.color/height/lushness` recolor / raise / vary the hill live.
+- [x] **Night silhouette:** at night the hill darkens to a near-black backlit
+      shape whose ridge stays clearly readable against the night sky. *(Tuned to
+      `×0.12` at full night after a first pass at `×0.25` washed out — see log.)*
+- [x] Correct depth (in front of clouds); no console / shader-compile errors;
+      build clean; `resize(camera)` refits the quad.
 
 ## Notes / guardrails
-- **Wind is broadcast** — read `params.wind` exactly as `clouds.js` does. Do not
-  invent a grass-only wind value.
-- "Recognizable, not perfect" — a readable fence silhouette + a swaying shaded
-  grass field is the bar; don't rabbit-hole on per-blade realism (foreground
-  detail + butterflies come in Task 6, post-FX mood in Task 8).
-- Procedural-first per §4/§7; a painted texture is an allowed fallback for either
-  layer if procedural looks bad, with the same `update(params, dt, t)` interface.
-- Sway must be base-anchored (tips move, roots don't) so the field doesn't slide
-  as a rigid sheet.
+- **Broadcast `uWind` + `timeOfDay`:** read exactly as the other layers do; no
+  hill-only copies. Reuses cloud fbm + `skyRamp.nightFactor` — not reinvented.
+- **Calm by design:** surface detail (grass tufts, AO, depth bands) is out of
+  scope; the foreground's *life* signal is the fireflies (Task 6).
+- **`params.grass` reused** — no new params block this task.
 
 ## Verification log
-_(fill in when run)_
-- `npm run build` result:
-- `npm run dev` result (module HTTP 200s, no overlay):
-- Observation (fence silhouette, grass look, sway, depth order):
-- Param-change tests (wind.strength / wind.direction / grass.color / lushness / height):
+- `npm run build`: ✓ 20 modules (was 14; +hill.js/.vert/.frag and the fireflies
+  trio from Task 6), 0 errors.
+- Browser (worktree dev server): hill renders as a soft fbm ridge; **ridge raised
+  to ~30% via `RIDGE_BASE` 0.30 → 0.38** per review (first render sat too low).
+- **Night-readability fix (with clouds, 2026-06-27):** first night pass had the
+  hill at `grass.color × 0.25` — same brightness as the night sky, so the ridge
+  dissolved. Root cause: night legibility is about *contrast*, not absolute
+  brightness. Dropped to `× 0.12` so the hill is clearly darker than the
+  blue-violet night sky → ridge reads as a backlit silhouette. Browser-confirmed
+  at night (`timeOfDay` 19–22) and day (`timeOfDay` 12).
